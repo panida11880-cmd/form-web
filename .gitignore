@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบฟอร์มลงทะเบียน</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f6fb;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:white;
+padding:30px;
+width:350px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin-bottom:10px;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+background:#2f6df6;
+color:white;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h2>ลงทะเบียน</h2>
+
+<form id="form">
+
+<input name="name" placeholder="ชื่อ" required>
+
+<input name="phone" placeholder="เบอร์โทร" required>
+
+<input name="email" placeholder="Email">
+
+<textarea name="message" placeholder="ข้อความ"></textarea>
+
+<button type="submit">ส่งข้อมูล</button>
+
+</form>
+
+</div>
+
+<script>
+
+const scriptURL = "https://script.google.com/macros/s/AKfycbwqgHHoqO3BMc9mGefHyrVPV60l-QzFyBONhi2bWvsi3H9KI16OMbJcv6Hglttc5m67/exec";
+
+document.getElementById("form").addEventListener("submit", e => {
+
+e.preventDefault();
+
+fetch(scriptURL,{
+method:"POST",
+body:new FormData(e.target)
+})
+.then(response=>{
+alert("ส่งข้อมูลเรียบร้อยแล้ว");
+document.getElementById("form").reset();
+})
+.catch(error=>{
+alert("เกิดข้อผิดพลาด");
+});
+
+});
+
+</script>
+
+</body>
+</html>
