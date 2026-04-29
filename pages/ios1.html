@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iPhone Simulator - Pro Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    /* ปรับแต่ง Scrollbar */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: #2f3e4c; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background-color: #3a4d5b; border-radius: 10px; border: 2px solid #2f3e4c; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  background-color: #1e293b;
+  color: #ffffff;
+  
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+    .iphone-container { position: relative; width: 390px; height: 844px; flex-shrink: 0; }
+
+    #copy-overlay {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      z-index: 1000; opacity: 0; cursor: pointer;
+    }
+
+    .iphone-frame {
+  width: 390px;
+  height: 844px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+
+  background: url('https://i.ibb.co/sJMt71KN/image.png') no-repeat center;
+  background-size: 100% 100%; /* 🔥 บังคับพอดี ไม่ยืด */
+}
+
+    /* --- ปรับแต่ง Status Bar ใหม่ตามรูปที่คุณส่งมา --- */
+    .status-bar {
+  height: 43px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 56px 0 44px; /* ✅ clean symmetric iOS padding */
+  background: transparent;
+  color: #000;
+  position: absolute;
+  top: 5px; /* ✅ slight top offset for better visual balance */
+  width: 100%;
+  z-index: 100;
+}
+.status-time {
+  font-size: 16.5px;
+  font-weight: 600; /* less bold = more iOS */
+  letter-spacing: -0.2px;
+  transform: translateY(-0.5px);
+  
+}
+
+.status-right {
+display: flex;
+align-items: center;
+gap: 3px;
+margin-inline: -25px;
+
+}
+
+.battery-outline {
+  width: 25px;
+  height: 12px;
+  border: none;        /* ❌ เอากรอบออก */
+  padding: 0;
+  display: flex;
+  align-items: center;
+  background: transparent;
+}
+#battery-fill {
+  height: 10px;
+  border-radius: 3px;
+  margin-left: 3px;   /* 🔥 ขยับให้ตรงช่อง */
+  margin-top: -1px;
+  margin-right: -1px;
+}
+
+#signal-icon { margin-right: -3px; }
+#wifi-icon { margin-right: -5px;
+  margin-left: 1px;
+  margin-top: -1.3px;}
+
+.battery-level {
+  height: 100%;
+  background: #000;
+  border-radius: 1.5px;
+}
+
+.battery-tip {
+  display: none;
+
+}
+
+.battery-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+
+    /* UI Content */
+    .browser-header { height: 54px; 
+      display: flex;
+       align-items: center;
+       justify-content: space-between; 
+       padding: 2 16px; 
+       border-bottom: none; solid #f2f2f2;
+        background: transparent; 
+        position: absolute; 
+        top: 39px; 
+        width: 100%;
+         color: #000; 
+         z-index: 90; }
+
+    .title-area { text-align: center;     padding-left: 28%;
+      margin-top: -8px;
+    }
+    .main-title { font-size: 14px; font-weight: 700; }
+    .sub-url { font-size: 10px; color: #8e8e93; }
+
+    /* ส่วนแสดงผลรูปภาพที่วาง */
+    .content-view { position: absolute;
+       top: 98px;
+        bottom: 83px;
+         width: 100%;
+          background: transparent;
+           overflow: hidden; 
+           display: flex; 
+           justify-content: center; }
+    .preview-img { width: 100%; 
+      height: 100%; 
+      object-fit: cover;
+       display: none; 
+       position: relative;
+        z-index: 2; }
+
+    .bottom-nav { position: absolute; bottom: 0; height: 83px; width: 100%; background: transparent; border-top: none solid #f2f2f2; display: flex; justify-content: space-around; padding-top: 12px; color: #000; }
+    .home-bar { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; background: #000; border-radius: 10px; }
+
+    /* Panel & Controls */
+    .panel { background: #2b3643; padding: 30px; border-radius: 20px; width: 420px; margin-left: 50px; height: fit-content; }
+    .field { margin-top: 7px; padding: 10px; font-size: 18px; border: 2px solid #5d6970; border-radius: 13px; background: rgba(255, 255, 255, 0.05); color: #fff; width: 100%; outline: none; }
+    .title-btn { padding: 8px 12px; font-size: 13px; cursor: pointer; background-color: #3a4d5b; color: #ffffff; border: 2px solid #5d6970; border-radius: 8px; transition: 0.3s; margin-bottom: 5px; }
+    .title-btn.active { background-color: #0066cc; border-color: #004b99; }
+  
+  /* Low Power Mode Toggle (iOS style) */
+.low-power-wrap {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.low-power-label {
+  font-size: 12px;
+  color: #facc15; /* yellow tone */
+}
+
+/* switch container */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
+}
+
+/* hide default checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* slider background */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #3a4d5b;
+  border-radius: 999px;
+  transition: 0.25s;
+}
+
+/* circle */
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  top: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.25s;
+}
+
+/* ON state */
+.switch input:checked + .slider {
+  background-color: #facc15; /* iOS yellow */
+}
+
+/* move circle */
+.switch input:checked + .slider::before {
+  transform: translateX(18px);
+}
+/* Select สวยๆ */
+.select-beauty {
+  margin-top: 7px;
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 2px solid #5d6970;
+  border-radius: 12px;
+    background: #2b3643;  /* สีพื้น dropdown */
+  color: #ffffff;       /* สีตัวหนังสือ */
+  width: 100%;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.select-beauty option {
+  background-color: #2b3643;
+  color: #fff;
+}
+
+/* hover */
+.select-beauty:hover {
+  border-color: #7c8a92;
+  background: rgba(255,255,255,0.08);
+}
+
+/* focus */
+.select-beauty:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.3);
+}
+
+/* ลูกศร dropdown */
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap::after {
+  content: "⌄";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+  pointer-events: none;
+  font-size: 18px;
+}
+
+/* ===== Slider เทพๆ ===== */
+.battery-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #22c55e 0%, #22c55e 100%);
+  outline: none;
+  transition: 0.2s;
+}
+
+/* track (พื้นหลัง) */
+.battery-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+/* thumb (ปุ่ม) */
+.battery-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #3b82f6;
+  cursor: pointer;
+  margin-top: -8px; /* จัดให้อยู่ตรงกลาง */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: 0.2s;
+}
+
+/* ตอน hover */
+.battery-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+/* ตอนกด */
+.battery-slider::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+  border-color: #2563eb;
+}
+
+/* Firefox รองรับ */
+.battery-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #4b5563;
+}
+
+.battery-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #3b82f6;
+  cursor: pointer;
+}
+
+/* label % */
+.batt-label {
+  position: absolute;  top: -28px;  left: 0;
+  transform: translate(-50%, 0);
+  transform: translateX(-50%);
+  background: #3b82f6;  color: #fff;  font-size: 12px;
+  padding: 3px 8px;  border-radius: 8px;  white-space: nowrap;
+  transition: 0.15s;  pointer-events: none;}
+.btn-back {
+  position: fixed;        /* 🔥 ทำให้ลอยคงที่ */
+  top: 20px;              /* ระยะจากบน */
+  left: 20px;            /* ระยะจากขวา */
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  transition: all 0.3s;
+  text-decoration: none;
+  z-index: 9999;          /* กันโดนทับ */
+}
+
+.btn-back:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.theme-toggle {
+            position: fixed; top: 1rem; right: 1rem; z-index: 50;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;
+            transition: all 0.3s;
+        }
+        body.light-mode .theme-toggle {
+            background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: #1e293b;
+        }
+        .theme-toggle:hover { transform: rotate(20deg) scale(1.1); }
+body.light-mode {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+body.light-mode .panel {
+  background: #ffffff;
+  color: #000;
+}
+
+body.light-mode .field,
+body.light-mode .select-beauty {
+  background: #f9fafb;
+  color: #000;
+  border-color: #ccc;
+}
+
+body.light-mode .title-btn {
+  background: #e5e7eb;
+  color: #000;
+  border-color: #ccc;
+}
+
+body.light-mode .title-btn.active {
+  background: #2563eb;
+  color: #fff;
+}
+.cellular-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #000;
+  letter-spacing: -0.3px;
+  transition: opacity 0.2s ease;
+    transform: translateY(-1px);
+
+}
+.network-slot {
+  position: relative;
+  width: 26px;
+  height: 23px;
+
+}
+
+
+/* ซ้อนกัน */
+.network-slot img,
+.network-slot span {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ขนาด WiFi */
+#wifi-icon {
+  width: 26px;
+  height: 23px;
+  position: relative;
+  top: 2px;
+}
+
+
+#cellular-img {
+  height: 17px;   /* 🔥 กำหนดแค่ความสูง */
+  width: auto;    /* 🔥 ให้มันคำนวณเอง */
+  object-fit: contain;
+
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.select-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+
+
+
+  </style>
+
+</head>
+<body>
+
+ <button onclick="toggleTheme()" class="theme-toggle" title="สลับโหมดมืด/สว่าง">
+        <svg id="iconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        <svg id="iconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    </button>
+
+<a href="home.html" class="btn-back px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5" style="font-family:'Sarabun',sans-serif;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    กลับ
+                </a>
+  <div class="iphone-container">
+    <img id="copy-overlay" alt="Simulator Screenshot">
+    
+    <div id="capture-area" class="iphone-frame">
+      <div class="status-bar">
+        <div id="display-time" class="status-time">00:00</div>
+        <div class="status-right">
+<img id="signal-icon"src="https://i.ibb.co/WpxT8tWW/image.png" 
+style="width: 20px; height: 17px;display:block;/* margin-top: -13.5px; position: relative; left: 4px;" alt="Signal">
+
+<div class="network-slot">
+  <img id="wifi-icon"
+       src="https://i.ibb.co/v82VpR3/image.png"
+       style="width:27px;
+       height:21.5px;
+       display:block;
+       position:absolute;
+       top:1;
+       left:2;"
+       alt="Wifi">
+  
+  <img id="cellular-img" 
+       src="https://i.ibb.co/Y4hMy4LW/4G.png" 
+       alt="Cellular">
+</div>
+
+  <div class="battery-container">
+    <div class="battery-outline">
+      <div id="battery-fill" class="battery-level" style="width: 100%;"></div>
+    </div>
+    <div class="battery-tip"></div>
+  </div>
+</div>
+      </div>
+
+      <div class="browser-header">
+        <div class="title-area">
+          <div id="display-title" class="main-title">หน้าแรก</div>
+          <div id="display-url" class="sub-url">https://joominen.com/index/login</div>
+        </div>
+      </div>
+
+      <div class="content-view">
+        <img id="img-render" class="preview-img">
+      </div>
+
+      
+      <div class="home-bar"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 class="text-xl font-bold mb-5">IPHONE X-14</h2>
+    
+<div class="mt-4">
+  <label class="text-xs text-gray-400">เลือกเมนูอัตโนมัติ</label>
+
+  <div class="select-wrap">
+    <select id="coin" class="select-beauty" onchange="updateDisplay()">
+      <option value="BTA">BTA</option>
+      <option value="ETA">ETA</option>
+      <option value="BCH">BCH</option>
+      <option value="ETC">ETC</option>
+      <option value="ㅤㅤ">ว่างเปล่า</option>
+      <option value="XAUUSD">XAUUSD</option>
+      <option value="XAUEUR">XAUEUR</option>
+      <option value="ETH/USDC">ETH/USDC</option>
+      <option value="ETH/USDT">ETH/USDT</option>
+      <option value="My wallet">เช็คยอดเงิน</option>
+      <option value="Withdraw">ถอนเงิน</option>
+      <option value="Orders">ส่งคำสั่ง</option>
+      <option value="mine">ของฉัน</option>
+      <option value="อัตราแลกเปลี่ยน">อัตราแลกเปลี่ยน</option>
+      <option value="Transaction">Transaction</option>
+      <option value="หน้าเเรก">หน้าเเรก</option>
+      <option value="ซื้อขาย">ซื้อขาย</option>
+      <option value="บันทึกการถอน">บันทึกการถอน</option>
+      <option value="ถอนเงิน">ถอนเงิน</option>
+      <option value="ผู้ใช้">ผู้ใช้</option>
+      <option value="ของฉัน">ของฉัน</option>
+      <option value="ราคาตลาด">ราคาตลาด</option>
+    </select>
+  </div>
+</div>
+    
+    <div class="mb-4">
+      <label class="text-xs text-gray-400">ตัวเลือกด่วน</label>
+      <div id="title-selection" class="flex flex-wrap gap-2 mt-2">
+        <button class="title-btn active" onclick="setTitle('BTA', this)">BTA</button>
+        <button class="title-btn" onclick="setTitle('ETA', this)">ETA</button>
+        <button class="title-btn" onclick="setTitle('ซื้อขาย', this)">ซื้อขาย</button>
+        <button class="title-btn" onclick="setTitle('ผู้ใช้', this)">ผู้ใช้</button>
+        <button class="title-btn" onclick="setTitle('หน้าแรก', this)">หน้าแรก</button>
+        <button class="title-btn" onclick="setTitle('ถอนเงิน', this)">ถอนเงิน</button>
+        <button class="title-btn" onclick="setTitle('บันทึกการถอน', this)">บันทึกการถอน</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div><label class="text-xs text-gray-400">ชื่อรายการ</label><input type="text" id="in-title" class="field" value="BTA" oninput="syncData()"></div>
+        <div><label class="text-xs text-gray-400">เวลา</label><input type="time" id="in-time" class="field" oninput="syncData()"></div>
+    </div>
+
+    <div class="mt-4"><label class="text-xs text-gray-400">URL</label><input type="text" id="in-url" class="field" value="https://joominen.com/index/login" oninput="syncData()"></div>
+    
+    <div class="mt-4 relative">
+      <label class="text-xs text-gray-400">แบตเตอรี่ (เลื่อนเพื่อปรับแถบพลังงาน)</label>
+      <input type="range"
+  id="in-batt"
+  class="battery-slider mt-2"
+  min="5"
+  max="100"
+  value="87"
+  oninput="syncData()">    <div id="batt-label" class="batt-label">87%</div>
+
+    </div>
+ <div class="low-power-wrap">
+  <span class="low-power-label">โหมดประหยัดพลังงาน</span>
+
+  <label class="switch">
+    <input type="checkbox" id="low-power" onchange="syncData()">
+    <span class="slider"></span>
+  </label>
+</div>
+<div class="mt-4">
+  <label class="text-xs text-gray-400">เครือข่าย</label>
+
+<!-- 🔥 Toggle เดียว -->
+<div class="low-power-wrap">
+  <span class="text-xs">เครือข่าย (WiFi / Cellular)</span>
+  <label class="switch">
+    <input type="checkbox" id="network-toggle" onchange="updateNetwork()">
+    <span class="slider"></span>
+  </label>
+</div>
+
+  <!-- 4G / 5G -->
+  <div class="select-wrap mt-2">
+    <select id="network-type" class="select-beauty" onchange="updateNetwork()">
+      <option value="4G">4G</option>
+      <option value="5G">5G</option>
+    </select>
+  </div>
+</div>
+
+    <div class="mt-6">
+      <button onclick="document.getElementById('file-in').click()" class="w-full bg-slate-600 hover:bg-slate-500 py-3 rounded-lg text-sm font-bold transition">อัปโหลดรูปภาพ</button>
+      <p class="text-[10px] text-gray-500 text-center mt-2">* สามารถกด Ctrl+V เพื่อวางรูปภาพได้ทันที</p>
+    </div>
+    <input type="file" id="file-in" class="hidden" accept="image/*" onchange="handleFile(this)">
+
+    <div class="flex gap-3 mt-6">
+        <button class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold transition" onclick="downloadImage()">Save PNG</button>
+        <button class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold transition" onclick="copyToClipboard()">Copy Image</button>
+    </div>
+  </div>
+
+<script src="theme.js"></script>
+<script>
+    // 1. ฟังก์ชันอัปเดตข้อมูลและเจนรูปทับ overlay
+    async function updateCopyOverlay() {
+      const captureArea = document.getElementById('capture-area');
+      const canvas = await html2canvas(captureArea, { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        backgroundColor: null 
+      });
+      document.getElementById('copy-overlay').src = canvas.toDataURL("image/png");
+    }
+
+function syncData() {
+  document.getElementById('display-title').innerText = document.getElementById('in-title').value;
+  document.getElementById('display-url').innerText = document.getElementById('in-url').value;
+  document.getElementById('display-time').innerText = document.getElementById('in-time').value;
+  
+  const bVal = document.getElementById('in-batt').value;
+  const fill = document.getElementById('battery-fill');
+  const slider = document.getElementById('in-batt');
+  const label = document.getElementById('batt-label');
+
+  const percentVal = ((bVal - slider.min) / (slider.max - slider.min)) * 100;
+
+  slider.style.background = `linear-gradient(to right, #22c55e ${percentVal}%, #4b5563 ${percentVal}%)`;
+
+  label.innerText = bVal + '%';
+  fill.style.width = bVal + '%';
+
+  const percent = (bVal - slider.min) / (slider.max - slider.min);
+  label.style.left = `calc(${percent * 100}% )`;
+
+  const isLowPower = document.getElementById('low-power').checked;
+
+  if (isLowPower) {
+    fill.style.backgroundColor = '#facc15';
+  } else {
+    fill.style.backgroundColor = (bVal <= 20) ? '#ff3b30' : '#000';
+  }
+
+  fill.offsetHeight;
+
+  // ✅ ต้องอยู่ตรงนี้
+  updateNetwork();
+
+  // ✅ และตัวนี้
+  updateCopyOverlay();
+}
+
+
+
+    function setTitle(val, btn) {
+      document.getElementById('in-title').value = val;
+      document.querySelectorAll('.title-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      syncData();
+    }
+
+    // 2. ฟังก์ชันจัดการรูปภาพ (ทั้ง Upload และ Paste)
+    function handleFile(input) {
+      if (input.files[0]) processFile(input.files[0]);
+    }
+
+    function processFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.getElementById('img-render');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        syncData();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ฟังก์ชันวางรูป (Paste) - สำคัญมาก ห้ามลบ
+    window.addEventListener('paste', e => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (let index in items) {
+        const item = items[index];
+        if (item.kind === 'file' && item.type.includes('image')) {
+          const blob = item.getAsFile();
+          processFile(blob);
+        }
+      }
+    });
+
+    // 3. ปุ่มคัดลอกและบันทึก
+   async function copyToClipboard() {
+  // ✅ force UI update to complete
+  await new Promise(r => setTimeout(r, 120));
+await updateCopyOverlay();
+await new Promise(r => setTimeout(r, 50));
+
+  
+const canvas = await html2canvas(document.getElementById('capture-area'), { 
+  scale: 3,
+  useCORS: true,
+  backgroundColor: null
+});
+
+  canvas.toBlob(blob => {
+    const item = new ClipboardItem({ "image/png": blob });
+    navigator.clipboard.write([item]).then(() => alert("คัดลอกรูปภาพแล้ว!"));
+  });
+}
+
+   async function downloadImage() {
+  // ✅ wait for DOM paint
+  await new Promise(r => setTimeout(r, 120));
+  await updateCopyOverlay();
+await new Promise(r => setTimeout(r, 50));
+
+  const canvas = await html2canvas(document.getElementById('capture-area'), { 
+  scale: 3,
+  useCORS: true,
+  backgroundColor: null
+});
+
+  const link = document.createElement('a');
+  link.download = `ios-ss-${Date.now()}.png`;
+  link.href = canvas.toDataURL();
+  link.click();
+}
+
+window.onload = () => {
+  const now = new Date();
+  document.getElementById('in-time').value =
+    now.getHours().toString().padStart(2, '0') + ':' +
+    now.getMinutes().toString().padStart(2, '0');
+
+  // ✅ เริ่มเป็น Cellular
+  document.getElementById('network-toggle').checked = false;
+
+  // 🔥 ต้องเรียกก่อน sync
+  updateNetwork();
+
+  syncData();
+};
+
+
+document.addEventListener("contextmenu", function(e) {
+  if (e.target.id === "copy-overlay") {
+    return true; // ✅ อนุญาตคลิกขวาที่รูป
+  }
+  e.preventDefault(); // ❌ บล็อกที่อื่น
+});
+ㅤ
+        
+function updateNetwork() {
+  const isWifi = document.getElementById('network-toggle').checked;
+  const wifiIcon = document.getElementById('wifi-icon');
+  const cellImg = document.getElementById('cellular-img');
+  const select = document.getElementById('network-type');
+
+  // ลิงก์รูปภาพ 4G / 5G (คุณสามารถเปลี่ยน URL เป็นรูปที่คุณต้องการได้)
+  const networkIcons = {
+    '4G': 'https://i.ibb.co/Y4hMy4LW/4G.png', // ใส่ URL รูป 4G ของคุณ
+    '5G': 'https://i.ibb.co/mrQn7DjY/5G.png'  // ใส่ URL รูป 5G ของคุณ
+  };
+
+if (isWifi) {
+  wifiIcon.style.opacity = '1';
+  wifiIcon.style.visibility = 'visible';
+
+  cellImg.style.opacity = '0';
+  cellImg.style.visibility = 'hidden';
+
+  select.classList.add('select-disabled');
+} else {
+  wifiIcon.style.opacity = '0';
+  wifiIcon.style.visibility = 'hidden';
+
+  cellImg.style.opacity = '1';
+  cellImg.style.visibility = 'visible';
+
+  cellImg.src = networkIcons[select.value];
+
+  select.classList.remove('select-disabled');
+}
+
+  updateCopyOverlay();
+}
+
+function updateDisplay() {
+  const val = document.getElementById('coin').value;
+
+  // เอาค่าที่เลือกไปใส่ title
+  document.getElementById('in-title').value = val;
+
+  // อัปเดตหน้าจอ
+  syncData();
+}
+const supabase = window.supabase.createClient("YOUR_URL","YOUR_KEY")
+
+async function checkAuth(){
+  const { data } = await supabase.auth.getSession()
+
+  if(!data.session){
+    // ❌ ไม่ได้ login → เด้งกลับ
+    window.location.href = "login.html"
+  }
+}
+
+checkAuth()
+
+</script>
+</body>
+</html>

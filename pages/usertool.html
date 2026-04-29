@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Image Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+        font-family: 'Sarabun', sans-serif; 
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+        /* กำหนดค่าตัวแปรสี */
+    :root {
+            --bg-body: #0f172a;
+    --bg-card: #1e293b;
+    --bg-input: #0f172a;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    }
+
+    /* เมื่อ html มี class "dark" ให้เปลี่ยนสีเป็นชุดนี้ */
+    .light  {
+    --bg-body: #f1f5f9;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    }
+
+        .canvas-container {
+            max-width: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            color: var(--fg);
+            background-color: var(--bg-card);
+        border-color: var(--border-color);
+        }
+        canvas {
+            max-width: 100%;
+            height: auto !important;
+            border-radius: 8px;
+        }
+.theme-toggle {
+        position: static; /* เปลี่ยนจาก fixed เป็น static เพื่อให้อยู่ใน nav */
+        background: rgba(120, 120, 120, 0.1);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+            body.light-mode .theme-toggle {
+            background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1); color: #1e293b;
+        }
+        .theme-toggle:hover { transform: rotate(20deg) scale(1.1); }
+
+        .glass-panel, .bg-slate-800 { 
+        background-color: var(--bg-card) !important; 
+        border-color: var(--border-color) !important;
+    }
+
+    input {
+        background-color: var(--bg-input) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-main) !important;
+    }
+
+    </style>
+      <link rel="stylesheet" href="theme.css">
+</head>
+<body class="min-h-screen pb-10">
+
+    <nav class="p-4 border-b transition-colors duration-300 sticky top-0 z-50 mb-6" 
+         style="background-color: var(--bg-card); border-color: var(--border-color);">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="home.html" class="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors" 
+               style="color: var(--text-main); border: 1px solid var(--border-color);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                กลับ
+            </a>
+            
+            <button onclick="toggleTheme()" class="theme-toggle w-10 h-10 rounded-full flex items-center justify-center">
+                <svg id="iconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <svg id="iconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
+        </div>
+    </nav>
+    
+    <main class="max-w-4xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <span class="bg-cyan-500 w-2 h-6 rounded-full mr-3"></span>
+                    กรอกข้อมูลลูกค้า
+                </h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">บัญชีทำงาน</label>
+                        <input type="text" id="user1" placeholder="ชื่อผู้ใช้งาน..." 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition"
+                            oninput="drawCanvas()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">รหัสผ่าน</label>
+                        <input type="text" id="user2" placeholder="รหัสผ่าน..." 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:outline-none transition"
+                            oninput="drawCanvas()">
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate-700 space-y-3">
+                    <p class="text-xs text-slate-500 mb-2">* ระบบรองรับการคัดลอกรูปภาพไปวางในแชทได้ทันที</p>
+                    
+                    <button onclick="copyCanvas()" class="w-full bg-slate-100 hover:bg-white text-slate-900 font-bold py-3 rounded-xl transition flex items-center justify-center shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        คัดลอกรูปภาพ
+                    </button>
+
+                    <button onclick="downloadCanvas()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-cyan-900/20 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        ดาวน์โหลดรูปภาพ
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="bg-slate-800 p-2 rounded-xl border border-slate-700 shadow-2xl canvas-container">
+                    <canvas id="canvas" width="800" height="1200"></canvas>
+                </div>
+                <p class="mt-4 text-sm text-slate-400">Preview (800x1200)</p>
+            </div>
+
+        </div>
+    </main>
+
+<script src="theme.js"></script>
+<script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const bg = new Image();
+        
+        bg.crossOrigin = "anonymous";
+        bg.src = "https://i.ibb.co/v4kP82Wx/image.png";
+
+        bg.onload = function() {
+            drawCanvas();
+        }
+
+        function drawCanvas() {
+            const user1 = document.getElementById("user1").value;
+            const user2 = document.getElementById("user2").value;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#ef4444"; 
+            ctx.textAlign = "left";
+
+            // บัญชีทำงาน
+            ctx.font = "600 28px Sarabun";
+            ctx.fillText(user1 || "user", 175, 473); 
+            ctx.fillText(user1 || "user", 175, 709); 
+
+            // รหัสผ่าน
+            ctx.font = "600 25px Sarabun";
+            ctx.fillText(user2 || "user", 425, 590); 
+            ctx.fillText(user2 || "user", 425, 688); 
+        }
+
+        // ฟังก์ชันคัดลอกรูปภาพ
+        async function copyCanvas() {
+            try {
+                canvas.toBlob(async (blob) => {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    await navigator.clipboard.write([item]);
+                    alert("✅ คัดลอกรูปภาพแล้ว! สามารถวางในแชทได้เลย");
+                });
+            } catch (err) {
+                console.error("Copy failed: ", err);
+                alert("❌ ไม่สามารถคัดลอกได้ กรุณาใช้การคลิกขวาที่รูปแทน");
+            }
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = 'user-credentials.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+/* ==================== */
+/* 1. Variable Definitions (Palette) */
+/* ==================== */
+:root {
+  /* Main Colors */
+  --color-burgundy: #800020;
+  --color-black: #121212;
+  --color-white: #ffffff;
+  --color-gray: #6b7280;
+  --color-gray-light: #f1f5f9;
+  
+  /* Dark Mode Defaults */
+  --bg-primary: var(--color-black);
+  --bg-secondary: #1e1e1e;
+  --text-primary: var(--color-white);
+  --text-secondary: #cccccc;
+  --accent-color: var(--color-white); /* Buttons are White in Dark Mode */
+  --accent-text: var(--color-black);  /* Button text is Black in Dark Mode */
+}
+
+/* ==================== */
+/* 2. Light Mode Activation */
+/* ==================== */
+html.light {
+  --bg-primary: var(--color-gray-light);
+  --bg-secondary: var(--color-white);
+  --text-primary: var(--color-black);
+  --text-secondary: #333333;
+  --accent-color: var(--color-burgundy); /* Buttons are Red in Light Mode */
+  --accent-text: var(--color-white);     /* Button text is White in Light Mode */
+}
+
+/* ==================== */
+/* 3. Global Styles */
+/* ==================== */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: sans-serif; /* Adjust as needed */
+}
+
+/* Text Elements */
+h1, h2, h3, h4, h5, h6, p, span, li {
+  color: var(--text-primary);
+}
+
+/* Links */
+a {
+  color: var(--color-burgundy);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: #a00028; /* Lighter burgundy for hover */
+}
+
+/* ==================== */
+/* 4. Components (Cards, Inputs, Buttons) */
+/* ==================== */
+
+/* Cards & Containers */
+.menu-card, .menu-grid, .glass-panel, .card, .box {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Input Fields */
+.input-field {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--color-gray);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+/* Buttons (The requested behavior) */
+.btn-primary, .btn-ghost, button {
+  background-color: var(--accent-color);
+  color: var(--accent-text);
+  border: 2px solid transparent;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* Ghost Button Specifics */
+.btn-ghost {
+  background-color: transparent;
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.btn-ghost:hover {
+  background-color: var(--accent-color);
+  color: var(--accent-text);
+}
+
+/* Toast Notifications */
+.toast {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  border-left: 5px solid var(--color-burgundy);
+}

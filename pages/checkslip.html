@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจสอบสลิป - AI SMART CONTRACT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#0891b2',
+                        danger: '#dc2626',
+                        success: '#16a34a',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * { font-family: 'Sarabun', sans-serif; }
+        
+        :root {
+            --bg-primary: #0c1222;
+            --bg-secondary: #141d2f;
+            --bg-card: rgba(20, 32, 55, 0.7);
+            --bg-input: rgba(30, 45, 75, 0.6);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --accent: #0891b2;
+            --accent-glow: rgba(8, 145, 178, 0.4);
+        }
+        
+        html.light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(241, 245, 249, 0.8);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: rgba(15, 23, 42, 0.08);
+            --accent-glow: rgba(8, 145, 178, 0.2);
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        
+        /* Animated Background */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(8, 145, 178, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(22, 163, 74, 0.05) 0%, transparent 50%);
+            animation: bgPulse 20s ease-in-out infinite;
+        }
+        
+        html.light .bg-pattern::before {
+            background: radial-gradient(circle at 30% 20%, rgba(8, 145, 178, 0.12) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(22, 163, 74, 0.08) 0%, transparent 50%);
+        }
+        
+        @keyframes bgPulse {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-5%, 5%) scale(1.1); }
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+            25% { transform: translateY(-30px) translateX(10px); opacity: 0.6; }
+            50% { transform: translateY(-15px) translateX(-10px); opacity: 0.4; }
+            75% { transform: translateY(-40px) translateX(5px); opacity: 0.5; }
+        }
+        
+        .main-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            transition: all 0.4s ease;
+        }
+        
+        html.light .main-container {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08),
+                        0 0 0 1px rgba(0, 0, 0, 0.03);
+        }
+        
+        .header-bar {
+            background: linear-gradient(180deg, rgba(20, 29, 47, 0.9) 0%, rgba(20, 29, 47, 0.7) 100%);
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        html.light .header-bar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+        }
+        
+        .preview-panel {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.5) 0%, rgba(20, 32, 55, 0.3) 100%);
+            border-right: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        html.light .preview-panel {
+            background: linear-gradient(135deg, rgba(241, 245, 249, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+        }
+        
+        .form-panel {
+            background: rgba(12, 18, 34, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        html.light .form-panel {
+            background: rgba(255, 255, 255, 0.6);
+        }
+        
+        .input-field {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-field::placeholder { color: var(--text-muted); }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        
+        .drop-zone {
+            background: linear-gradient(135deg, rgba(8, 145, 178, 0.05) 0%, rgba(8, 145, 178, 0.02) 100%);
+            border: 2px dashed rgba(8, 145, 178, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(8, 145, 178, 0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .drop-zone:hover::before { opacity: 1; }
+        
+        .drop-zone:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px var(--accent-glow);
+        }
+        
+        .drop-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(8, 145, 178, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .status-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .status-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .status-btn:hover::before { opacity: 1; }
+        
+        .status-btn:not(.active) {
+            opacity: 0.4;
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+            box-shadow: none !important;
+            transform: scale(0.98);
+        }
+        
+        .status-btn.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .btn-approved.active {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            box-shadow: 0 8px 25px -5px rgba(22, 163, 74, 0.5);
+        }
+        
+        .btn-rejected.active {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: 0 8px 25px -5px rgba(220, 38, 38, 0.5);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before { left: 100%; }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px -10px rgba(8, 145, 178, 0.5);
+        }
+        
+        .btn-primary:active:not(:disabled) { transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Phone Frame - ปรับให้รองรับรูปสั้น/ยาว */
+        .phone-frame {
+            background: linear-gradient(145deg, #1a1a2e 0%, #0d0d1a 100%);
+            border-radius: 36px;
+            padding: 8px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            transition: all 0.4s ease;
+            width: 100%;
+            max-width: 420px; /* คงที่เพื่อความสวยงามของตัวอย่าง */
+        }
+        
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 24px;
+            background: #000;
+            border-radius: 12px;
+            z-index: 10;
+        }
+        
+        html.light .phone-frame {
+            background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        
+        .phone-screen {
+            background: #fff;
+            border-radius: 28px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            min-height: 300px; /* ความสูงขั้นต่ำ */
+        }
+        
+        /* รูปภาพใน Preview - ปรับให้เป็น object-contain เพื่อไม่ให้ขาด */
+        #slipImagePreview {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            background-color: #f8fafc;
+        }
+        
+        .preview-header {
+            background: linear-gradient(180deg, #1a1f2e 0%, #141820 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .preview-footer-danger {
+            background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+            border-top: 3px solid #f87171;
+        }
+        
+        .preview-footer-success {
+            background: linear-gradient(180deg, #166534 0%, #14532d 100%);
+            border-top: 3px solid #4ade80;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 50;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-back {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-back:hover {
+            background: rgba(8, 145, 178, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateX(-3px);
+        }
+        
+        .action-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: rgba(8, 145, 178, 0.15);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -10px var(--accent-glow);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            padding: 14px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.95), rgba(21, 128, 61, 0.95));
+            box-shadow: 0 10px 30px -5px rgba(22, 163, 74, 0.4);
+        }
+        
+        .toast.error {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.95));
+            box-shadow: 0 10px 30px -5px rgba(220, 38, 38, 0.4);
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn { animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border-color) 0%, transparent 100%);
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .warning-box:hover {
+            border-color: rgba(220, 38, 38, 0.4);
+            box-shadow: 0 5px 20px -10px rgba(220, 38, 38, 0.3);
+        }
+        
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .preview-panel { border-right: none; border-bottom: 1px solid var(--border-color); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+    
+    <div class="bg-pattern">
+        <div class="particle" style="width: 6px; height: 6px; background: var(--accent); top: 20%; left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="width: 4px; height: 4px; background: var(--success); top: 60%; left: 85%; animation-delay: 2s;"></div>
+        <div class="particle" style="width: 8px; height: 8px; background: var(--accent); top: 80%; left: 25%; animation-delay: 4s;"></div>
+    </div>
+    
+    <button onclick="toggleTheme()" class="theme-toggle" title="สลับโหมดมืด/สว่าง" aria-label="สลับธีม">
+        <svg id="iconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+        <svg id="iconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+    </button>
+
+    <div id="toast" class="toast"></div>
+    
+    <div class="container mx-auto max-w-6xl relative z-10">
+        <div class="main-container rounded-3xl overflow-hidden animate-fadeIn">
+            <!-- Header -->
+            <div class="header-bar px-5 py-4 flex items-center gap-3">
+                <a href="home.html" class="btn-back px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    กลับ
+                </a>
+                <h1 class="text-lg font-semibold flex-1 text-center" style="color: var(--text-primary);">
+                    แพลตฟอร์มทำสลิปผ่าน/ไม่ผ่าน
+                </h1>
+                <div class="w-16"></div>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-0">
+                <!-- Left: Preview -->
+                <div class="preview-panel p-6 md:p-8 flex flex-col items-center justify-center min-h-[600px]">
+                    <div id="phonePreview" class="phone-frame">
+                        <div class="phone-screen">
+                            <div class="preview-header px-5 py-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <img src="https://s3.tradingview.com/userpics/62540680-2Sr7_big.png" class="w-10 h-10 rounded-xl object-cover shadow-lg" alt="Logo">
+                                        <span class="text-white font-bold text-base tracking-wide">Webull Thailand</span>
+                                    </div>
+                                    <button id="headerActionBtn" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold text-white shadow-lg">
+                                        <span id="headerBtnText">ตรวจสอบ</span>
+                                    </button>
+                                </div>
+                                <div class="pl-1">
+                                    <div class="text-gray-300 text-sm">
+                                        User: <span id="userPreview" class="text-white font-semibold">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="relative bg-gray-100 flex-grow flex items-center justify-center">
+                                <div id="slipPlaceholder" class="text-center p-8 text-gray-400">
+                                    <svg class="w-14 h-14 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="text-sm">วางรูปสลิปที่นี่</span>
+                                </div>
+                                <img id="slipImagePreview" class="hidden" alt="สลิป">
+                            </div>
+                            
+                            <div id="previewFooter" class="hidden">
+                                <div class="px-5 py-4">
+                                    <p id="notePreview" class="text-sm font-semibold"></p>
+                                    <p id="contactPreview" class="text-xs mt-2 opacity-90"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="actionButtons" class="hidden mt-6 flex gap-3">
+                        <button onclick="copyToClipboard()" class="action-btn px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            คัดลอกรูป
+                        </button>
+                        <button onclick="downloadImage()" class="action-btn px-5 py-2.5 rounded-xl font-medium text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            ดาวน์โหลด
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Right: Form -->
+                <div class="form-panel p-6 md:p-8">
+                    <div class="section-title mb-6">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        พร้อมใช้งาน
+                    </div>
+                    
+                    <!-- Drop Zone -->
+                    <div id="dropZone" class="drop-zone rounded-2xl p-6 text-center cursor-pointer mb-6 min-h-[150px] flex flex-col items-center justify-center">
+                        <div id="dropPlaceholder" class="space-y-3">
+                            <div class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center" style="background: rgba(8, 145, 178, 0.1);">
+                                <svg class="w-7 h-7" style="color: var(--accent);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-medium text-sm" style="color: var(--text-primary);">วางรูปที่นี่ หรือคลิกเลือกไฟล์</p>
+                                <p class="text-xs mt-1" style="color: var(--text-muted);">รองรับ Ctrl+V</p>
+                            </div>
+                        </div>
+                        <div id="formImagePreview" class="hidden w-full">
+                            <img id="formPreviewImg" class="max-h-24 mx-auto rounded-xl shadow-lg" alt="สลิป">
+                            <p class="text-xs mt-2" style="color: var(--accent);">คลิกเพื่อเปลี่ยนรูป</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    
+                    <!-- User Input -->
+                    <div class="mb-5">
+                        <label class="form-label">ยูสเซอร์ลูกค้า</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium" style="color: var(--text-muted);">User:</span>
+                            <input type="text" id="userInput" placeholder="BCP105" class="input-field w-full pl-20 pr-4 py-3 rounded-xl text-sm font-medium" oninput="updatePreview()">
+                        </div>
+                    </div>
+                    
+                    <!-- Status Buttons -->
+                    <div class="mb-5">
+                        <label class="form-label">สถานะการตรวจสอบ</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <button type="button" id="btnApproved" onclick="setStatus('approved')" class="status-btn py-3 px-4 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                ผ่านการตรวจสอบ
+                            </button>
+                            <button type="button" id="btnRejected" onclick="setStatus('rejected')" class="status-btn py-3 px-4 rounded-xl font-medium text-white text-sm flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                ไม่ผ่านการตรวจสอบ
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Note Input -->
+                    <div class="mb-6">
+                        <label class="form-label">หมายเหตุ</label>
+                        <textarea id="noteInput" rows="2" placeholder="เพิ่มหมายเหตุ..." class="input-field w-full px-4 py-3 rounded-xl resize-none text-sm" oninput="updatePreview()"></textarea>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex gap-4 mb-6">
+                        <button onclick="clearForm()" class="flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all" style="background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            ล้างข้อมูล
+                        </button>
+                        <button onclick="generateFinalImage()" id="generateBtn" class="flex-1 btn-primary py-3 px-4 rounded-xl font-semibold text-white text-sm" disabled>
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            สร้างรูปสำเร็จ
+                        </button>
+                    </div>
+                    
+                    <!-- Warning Box -->
+                    <div class="warning-box">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" style="color: var(--danger);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <p class="text-xs leading-relaxed" style="color: var(--danger);">
+                                ระบบ AI SMART CONTRACT โปรดติดต่อผู้แจ้งบัญชี
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <canvas id="resultCanvas" class="hidden"></canvas>
+
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isLight = html.classList.toggle('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            updateThemeIcon();
+        }
+        
+        function updateThemeIcon() {
+            const isLight = document.documentElement.classList.contains('light');
+            document.getElementById('iconMoon').classList.toggle('hidden', isLight);
+            document.getElementById('iconSun').classList.toggle('hidden', !isLight);
+        }
+        
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'light' || (!savedTheme && !prefersDark)) {
+                document.documentElement.classList.add('light');
+            }
+            updateThemeIcon();
+        })();
+        
+        // App State
+        let currentStatus = null;
+        let currentImage = null;
+        let resultCanvas = null;
+        let logoImg = null;
+        const LOGO_SRC = 'https://s3.tradingview.com/userpics/62540680-2Sr7_big.png';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            resultCanvas = document.getElementById('resultCanvas');
+            setupDragAndDrop();
+            setupPasteHandler();
+            loadLogo();
+        });
+        
+        function loadLogo() {
+            logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            logoImg.onload = () => {};
+            logoImg.onerror = () => { logoImg = null; };
+            logoImg.src = LOGO_SRC;
+        }
+                
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', (e) => { 
+                e.preventDefault(); 
+                dropZone.classList.add('dragover'); 
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+            });
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) handleFile(e.target.files[0]);
+            });
+        }
+        
+        function setupPasteHandler() {
+            document.addEventListener('paste', (e) => {
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        handleFile(item.getAsFile());
+                        break;
+                    }
+                }
+            });
+        }
+        
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('กรุณาเลือกไฟล์รูปภาพ', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImage = new Image();
+                currentImage.onload = () => {
+                    document.getElementById('dropPlaceholder').classList.add('hidden');
+                    document.getElementById('formImagePreview').classList.remove('hidden');
+                    document.getElementById('formPreviewImg').src = e.target.result;
+                    document.getElementById('dropZone').classList.add('has-image');
+                    
+                    document.getElementById('slipPlaceholder').classList.add('hidden');
+                    document.getElementById('slipImagePreview').classList.remove('hidden');
+                    document.getElementById('slipImagePreview').src = e.target.result;
+                    
+                    updatePreview();
+                    showToast('โหลดรูปสำเร็จ', 'success');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function setStatus(status) {
+            currentStatus = status;
+            const noteInput = document.getElementById('noteInput');
+            const headerBtn = document.getElementById('headerActionBtn');
+            const headerBtnText = document.getElementById('headerBtnText');
+            const previewFooter = document.getElementById('previewFooter');
+            
+            document.getElementById('btnApproved').classList.toggle('active', status === 'approved');
+            document.getElementById('btnRejected').classList.toggle('active', status === 'rejected');
+            
+            headerBtn.classList.remove('hidden');
+            
+            if (status === 'rejected') {
+                if (!noteInput.value || noteInput.value === 'ผ่านการตรวจสอบของระบบ AI SMART CONTRACT') {
+                    noteInput.value = 'หมายเหตุ: ระบบ AI SMART CONTRACT ไม่สามารถอ่าน ค่าของสลิปได้';
+                }
+                headerBtn.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+                headerBtn.style.boxShadow = '0 4px 15px rgba(220, 38, 38, 0.4)';
+                headerBtnText.textContent = 'ไม่ผ่านการตรวจสอบ';
+                
+                previewFooter.classList.remove('hidden', 'preview-footer-success');
+                previewFooter.classList.add('preview-footer-danger');
+                document.getElementById('contactPreview').textContent = 'โปรดติดต่อผู้แจ้งบัญชี';
+            } else {
+                if (noteInput.value === 'หมายเหตุ: ระบบ AI SMART CONTRACT ไม่สามารถอ่าน ค่าของสลิปได้') {
+                     noteInput.value = 'ผ่านการตรวจสอบของระบบ AI SMART CONTRACT';
+                } else if (!noteInput.value) {
+                     noteInput.value = 'ผ่านการตรวจสอบของระบบ AI SMART CONTRACT';
+                }
+                headerBtn.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+                headerBtn.style.boxShadow = '0 4px 15px rgba(22, 163, 74, 0.4)';
+                headerBtnText.textContent = 'ผ่านการตรวจสอบ';
+                
+                previewFooter.classList.remove('hidden', 'preview-footer-danger');
+                previewFooter.classList.add('preview-footer-success');
+                document.getElementById('contactPreview').textContent = 'โปรดติดต่อผู้แจ้งบัญชี';
+            }
+            updatePreview();
+        }
+        
+        function updatePreview() {
+            const user = document.getElementById('userInput').value || '-';
+            const note = document.getElementById('noteInput').value;
+            
+            document.getElementById('userPreview').textContent = user;
+            document.getElementById('notePreview').textContent = note;
+            
+            document.getElementById('generateBtn').disabled = !(currentImage && currentStatus);
+        }
+        
+        function drawLogoOnCanvas(ctx, x, y, size) {
+            const r = 10;
+            if (logoImg && logoImg.complete && logoImg.naturalHeight !== 0) {
+                ctx.save();
+                roundRect(ctx, x, y, size, size, r);
+                ctx.clip();
+                ctx.drawImage(logoImg, x, y, size, size);
+                ctx.restore();
+                ctx.save();
+                roundRect(ctx, x, y, size, size, r);
+                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                ctx.save();
+                roundRect(ctx, x, y, size, size, r);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.clip();
+                ctx.fillStyle = '#1a73e8';
+                ctx.font = 'bold ' + Math.floor(size * 0.5) + 'px Sarabun, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('W', x + size / 2, y + size / 2);
+                ctx.restore();
+            }
+        }
+        
+        // === ปรับปรุงฟังก์ชัน generateFinalImage ให้รองรับรูปสั้น/ยาวอัตโนมัติ ===
+        function generateFinalImage() {
+            if (!currentImage || !currentStatus) {
+                showToast('กรุณากรอกข้อมูลให้ครบ', 'error');
+                return;
+            }
+            
+            const user = document.getElementById('userInput').value || 'ไม่ระบุ';
+            const note = document.getElementById('noteInput').value;
+            
+            const canvas = resultCanvas;
+            const ctx = canvas.getContext('2d');
+            
+            // --- กำหนดความกว้างมาตรฐาน (Smart Scaling) ---
+            // ต้องการให้รูปออกมาความกว้างประมาณนี้เสมอ ไม่ว่าต้นฉบับจะใหญ่หรือเล็กแค่ไหน
+            const TARGET_WIDTH = 600; 
+            
+            // คำนวณอัตราส่วนเพื่อให้รูปพอดีกับความกว้างมาตรฐาน
+            const scale = TARGET_WIDTH / currentImage.width;
+            const imgWidth = TARGET_WIDTH;
+            const imgHeight = Math.round(currentImage.height * scale);
+            
+            // --- กำหนดขนาดส่วนหัวและท้ายที่สวยงามคงที่ ---
+            const headerHeight = 110; // ความสูง Header คงที่
+            const padding = 24;
+            const fontSize = 18;
+            const lineHeight = 26;
+            const contactText = "โปรดติดต่อผู้แจ้งบัญชี";
+            
+            ctx.font = `500 ${fontSize}px Sarabun, sans-serif`;
+            const maxWidth = imgWidth - padding * 2;
+            
+            // คำนวณการตัดคำหมายเหตุ
+            const noteLines = [];
+            let currentLine = '';
+            for(let i=0; i<note.length; i++) {
+                const testLine = currentLine + note[i];
+                if (ctx.measureText(testLine).width > maxWidth) {
+                    noteLines.push(currentLine);
+                    currentLine = note[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            noteLines.push(currentLine);
+            
+            const noteHeight = noteLines.length * lineHeight;
+            const footerHeight = Math.max(100, padding + noteHeight + lineHeight + padding);
+            
+            // --- สร้าง Canvas ขนาดใหม่ ---
+            canvas.width = imgWidth;
+            canvas.height = headerHeight + imgHeight + footerHeight;
+            
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            
+            // --- วาดพื้นหลังส่วน Header ---
+            const headerGradient = ctx.createLinearGradient(0, 0, 0, headerHeight);
+            headerGradient.addColorStop(0, '#1a1f2e');
+            headerGradient.addColorStop(1, '#141820');
+            ctx.fillStyle = headerGradient;
+            ctx.fillRect(0, 0, imgWidth, headerHeight);
+            
+            // วาดโลโก้
+            const logoSize = 44;
+            drawLogoOnCanvas(ctx, padding, 14, logoSize);
+            
+            // วาดชื่อแอป
+            ctx.font = 'bold 22px Sarabun, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Webull Thailand', padding + logoSize + 14, 14 + logoSize / 2);
+            
+            // วาดปุ่มสถานะบน Header
+            const btnText = currentStatus === 'approved' ? 'ผ่านการตรวจสอบ' : 'ไม่ผ่านการตรวจสอบ';
+            ctx.font = 'bold 13px Sarabun, sans-serif';
+            const btnTextWidth = ctx.measureText(btnText).width;
+            const btnPH = 16;
+            const btnW = btnTextWidth + btnPH * 2;
+            const btnH = 36;
+            const btnX = imgWidth - btnW - padding;
+            const btnY = 18;
+            
+            const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX + btnW, btnY + btnH);
+            if (currentStatus === 'approved') {
+                btnGrad.addColorStop(0, '#16a34a');
+                btnGrad.addColorStop(1, '#15803d');
+                ctx.shadowColor = 'rgba(22,163,74,0.5)';
+            } else {
+                btnGrad.addColorStop(0, '#dc2626');
+                btnGrad.addColorStop(1, '#b91c1c');
+                ctx.shadowColor = 'rgba(220,38,38,0.5)';
+            }
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 2;
+            roundRect(ctx, btnX, btnY, btnW, btnH, 8);
+            ctx.fillStyle = btnGrad;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(btnText, btnX + btnW / 2, btnY + btnH / 2);
+            
+            // วาดข้อความ User
+            const userLineY = 14 + logoSize + 22;
+            ctx.font = '15px Sarabun, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText('User: ', padding, userLineY);
+            const userLabelW = ctx.measureText('User: ').width;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '600 15px Sarabun, sans-serif';
+            ctx.fillText(user, padding + userLabelW, userLineY);
+            
+            // --- วาดรูปภาพ (Scale ให้พอดี Canvas แน่นอน) ---
+            // วาดพื้นหลังสีขาวก่อนกันกรณีรูปโปร่ง
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, headerHeight, imgWidth, imgHeight);
+            
+            // วาดรูปภาพให้เต็มความกว้างพอดี
+            ctx.drawImage(currentImage, 0, 0, currentImage.width, currentImage.height, 0, headerHeight, imgWidth, imgHeight);
+            
+            // --- วาด Footer ---
+            const footerY = headerHeight + imgHeight;
+            
+            if (currentStatus === 'rejected') {
+                const fg = ctx.createLinearGradient(0, footerY, 0, footerY + footerHeight);
+                fg.addColorStop(0, '#991b1b');
+                fg.addColorStop(1, '#7f1d1d');
+                ctx.fillStyle = fg;
+                ctx.fillRect(0, footerY, imgWidth, footerHeight);
+                ctx.strokeStyle = '#f87171';
+            } else {
+                const fg = ctx.createLinearGradient(0, footerY, 0, footerY + footerHeight);
+                fg.addColorStop(0, '#166534');
+                fg.addColorStop(1, '#14532d');
+                ctx.fillStyle = fg;
+                ctx.fillRect(0, footerY, imgWidth, footerHeight);
+                ctx.strokeStyle = '#4ade80';
+            }
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, footerY);
+            ctx.lineTo(imgWidth, footerY);
+            ctx.stroke();
+            
+            ctx.textBaseline = 'top';
+            ctx.font = `500 ${fontSize}px Sarabun, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillStyle = currentStatus === 'rejected' ? '#fecaca' : '#bbf7d0';
+            
+            let currentY = footerY + padding;
+            for(let i=0; i<noteLines.length; i++) {
+                ctx.fillText(noteLines[i], padding, currentY);
+                currentY += lineHeight;
+            }
+            
+            currentY += 6;
+            ctx.fillStyle = currentStatus === 'rejected' ? '#fca5a5' : '#86efac';
+            ctx.fillText(contactText, padding, currentY);
+            
+            document.getElementById('actionButtons').classList.remove('hidden');
+            showToast('สร้างรูปสำเร็จ พร้อมคัดลอก', 'success');
+        }
+        
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        async function copyToClipboard() {
+            try {
+                const blob = await new Promise(resolve => resultCanvas.toBlob(resolve, 'image/png'));
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('คัดลอกรูปสำเร็จ', 'success');
+            } catch (err) {
+                showToast('ไม่สามารถคัดลอกได้ กรุณาดาวน์โหลด', 'error');
+            }
+        }
+        
+        function downloadImage() {
+            const link = document.createElement('a');
+            const user = document.getElementById('userInput').value || 'unknown';
+            link.download = 'slip_' + user + '_' + Date.now() + '.png';
+            link.href = resultCanvas.toDataURL('image/png');
+            link.click();
+            showToast('ดาวน์โหลดสำเร็จ', 'success');
+        }
+        
+        function clearForm() {
+            currentImage = null;
+            currentStatus = null;
+            
+            document.getElementById('userInput').value = '';
+            document.getElementById('noteInput').value = '';
+            document.getElementById('dropPlaceholder').classList.remove('hidden');
+            document.getElementById('formImagePreview').classList.add('hidden');
+            document.getElementById('dropZone').classList.remove('has-image');
+            document.getElementById('slipPlaceholder').classList.remove('hidden');
+            document.getElementById('slipImagePreview').classList.add('hidden');
+            document.getElementById('previewFooter').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('headerActionBtn').classList.add('hidden');
+            document.getElementById('btnApproved').classList.remove('active');
+            document.getElementById('btnRejected').classList.remove('active');
+            document.getElementById('userPreview').textContent = '-';
+            document.getElementById('generateBtn').disabled = true;
+            
+            showToast('ล้างข้อมูลสำเร็จ', 'success');
+        }
+        
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>

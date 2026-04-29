@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DesignDept Pro - LínFán Universe</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+    :root {
+      --bg-dark: #080b10;
+      --bg-card: rgba(18, 24, 38, 0.85);
+      --fg: #ffffff;
+      --fg-muted: #8b95a8;
+      --accent-blue: #00d4ff;
+      --accent-gold: #d4a853;
+      --metallic-blue: #4a90c2;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --glass-bg: rgba(255, 255, 255, 0.03);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: var(--bg-dark);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4 { font-family: 'Sarabun', sans-serif; font-weight: 700; }
+
+    /* Texture Overlay */
+    .texture-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.04;
+    }
+
+    /* Glass Cards */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+    }
+
+    /* Inputs */
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      color: var(--fg);
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--metallic-blue));
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--fg-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+    /* Menu Grid */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .menu-card {
+      padding: 24px;
+      border-radius: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .menu-card:hover {
+      border-color: rgba(0, 212, 255, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    .menu-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .menu-card:hover::before { opacity: 1; }
+
+    /* Background Animation */
+    #bg-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    }
+
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px) scale(0.95);
+
+  min-width: 280px;
+  max-width: 360px;
+  padding: 14px 18px;
+
+  border-radius: 16px;
+  background: rgba(18, 24, 38, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+
+  opacity: 0;
+
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.toast-content {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* types */
+.toast.success {
+  border-color: rgba(0,255,136,0.3);
+}
+
+.toast.error {
+  border-color: rgba(255,77,77,0.3);
+}
+    /* Fade transitions */
+    .fade-in { animation: fadeIn 0.6s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .hidden { display: none; }
+
+    @keyframes toastBounce {
+  0%   { transform: translateY(40px) scale(0.95); }
+  60%  { transform: translateY(-4px) scale(1.02); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes toastDrop {
+  0% {
+    transform: translateX(-50%) translateY(-40px) scale(0.9);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-50%) translateY(6px) scale(1.03);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+.toast.show {
+  opacity: 1;
+  animation: toastDrop 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Light Mode Colors */
+:root {
+  --bg-dark: #080b10;
+  --fg: #ffffff;
+  /* ... ค่าเดิมของคุณ ... */
+}
+
+.light {
+  --bg-dark: #f1f5f9;      /* สีพื้นหลังสว่าง */
+  --bg-card: #ffffff;      /* สีการ์ดขาว */
+  --fg: #0f172a;           /* ตัวหนังสือเข้ม */
+  --fg-muted: #64748b;
+  --border-subtle: rgba(0, 0, 0, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* เพิ่มเติม: ปรับ Canvas พื้นหลังให้จางลงเมื่อเป็นโหมดสว่าง */
+.light #bg-canvas {
+  opacity: 0.3;
+}
+  </style>
+
+</head>
+
+<body>
+ 
+<body class="bg-[var(--bg-dark)] text-[var(--fg)] transition-colors duration-300">
+
+  <!-- Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="texture-overlay"></div>
+
+  <!-- Toast Notification -->
+<div id="toast" class="toast">
+  <div class="toast-content">
+    <div id="toast-icon"></div>
+    <div>
+      <p id="toast-title" class="font-semibold text-sm"></p>
+      <p id="toast-message" class="text-xs text-gray-400"></p>
+    </div>
+  </div>
+</div>
+
+  <!-- Main Container -->
+  <div class="relative z-10 min-h-screen flex flex-col">
+    
+    <!-- Navigation -->
+    <nav class="p-4 md:p-6 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00d4ff] to-[#4a90c2] flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+          
+        </div>
+        <span class="font-bold text-lg tracking-tight" style="font-family: 'Sarabun';">จักวาลหลินฝาน<span class="text-[var(--accent-blue)]">.</span></span>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-3">
+        <!-- Language Switcher -->
+        <div class="flex bg-black/20 rounded-lg p-1 border border-white/5">
+          <button id="lang-en" class="lang-btn px-3 py-1 text-xs rounded-md transition-all text-white/50" onclick="setLanguage('en')">EN</button>
+          <button id="lang-th" class="lang-btn px-3 py-1 text-xs rounded-md transition-all text-white/50" onclick="setLanguage('th')">TH</button>
+        </div>
+
+        <!-- Auth Status (Visible when logged in) -->
+        <div id="auth-status" class="hidden items-center gap-3">
+          <span id="user-email" class="text-xs text-[var(--fg-muted)] hidden md:block"></span>
+          <button onclick="handleLogout()" class="btn-ghost text-xs">
+            <span data-i18n="nav_logout">Logout</span>
+          </button>
+ <button onclick="toggleTheme()" class="theme-toggle" title="สลับโหมดมืด/สว่าง">
+        <svg id="iconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        <svg id="iconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    </button>
+
+        </div>
+      </div>
+      
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-grow flex items-center justify-center p-6">
+
+      <!-- LOGIN SCREEN -->
+      <section id="auth-container" class="w-full max-w-md">
+        <div class="glass-panel p-8 md:p-10 text-center fade-in">
+          <h1 class="text-3xl md:text-4xl mb-2" data-i18n="login_title">Welcome Back</h1>
+          <p class="text-[var(--fg-muted)] mb-8 text-sm" data-i18n="login_subtitle">Sign in to access the asset generation portal.</p>
+          
+          <form id="auth-form" class="space-y-4 text-left">
+            <div>
+              <label class="text-xs text-[var(--fg-muted)] mb-1 block" data-i18n="form_email">Email</label>
+              <input type="email" id="auth-email" class="input-field" placeholder="user@example.com" required>
+            </div>
+            <div>
+              <label class="text-xs text-[var(--fg-muted)] mb-1 block" data-i18n="form_pass">Password</label>
+              <input type="password" id="auth-password" class="input-field" placeholder="••••••••" required>
+            </div>
+            
+            <div class="pt-2">
+              <button type="submit" class="btn-primary" data-i18n="btn_login">Sign In</button>
+            </div>
+            
+            <div class="text-center pt-4">
+              <p class="text-xs text-[var(--fg-muted)]">
+                <span data-i18n="login_no_account">Don't have an account?</span>
+                <button type="button" id="toggle-mode-btn" class="text-[var(--accent-blue)] hover:underline ml-1" onclick="toggleAuthMode()">
+                  <span data-i18n="btn_register">Register</span>
+                </button>
+              </p>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- DASHBOARD SCREEN -->
+      <section id="dashboard-container" class="w-full max-w-5xl hidden">
+        <div class="text-center mb-12 fade-in">
+          <h1 class="text-3xl md:text-4xl mb-3" data-i18n="dash_title">Generation Portal</h1>
+          <p class="text-[var(--fg-muted)] max-w-xl mx-auto" data-i18n="dash_subtitle">Professional graphic design tools for slip generation and device framing.</p>
+        </div>
+
+        <div class="menu-grid">
+          
+          <!-- Tool 1: Failed Slips -->
+          <div class="menu-card fade-in" style="animation-delay: 0.1s">
+            <div class="w-12 h-12 rounded-xl mb-4 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(212, 168, 83, 0.2), transparent);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2" data-i18n="tool1_title">Create a slip status.</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-6" data-i18n="tool1_desc">Create a system for notifying whether a payment slip has been approved or not.</p>
+            <button class="btn-primary text-sm py-3"  onclick="window.location.href='checkslip.html'" data-i18n="btn_open">Open Tool</button>
+          </div>
+
+          <!-- Tool 2: Phone Frames -->
+          <div class="menu-card fade-in" style="animation-delay: 0.2s">
+            <div class="w-12 h-12 rounded-xl mb-4 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), transparent);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2" data-i18n="tool2_title">Frame Mockups IPHONE X-14</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-6" data-i18n="tool2_desc">Insert screenshots into professional iPhone frames (Classic & Notch designs).</p>
+            <button class="btn-primary text-sm py-3" onclick="window.location.href='ios1.html'"data-i18n="btn_open">Open Tool</button>
+          </div>
+
+          <!-- Tool 3: Slip Verification -->
+          <div class="menu-card fade-in" style="animation-delay: 0.3s">
+            <div class="w-12 h-12 rounded-xl mb-4 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), transparent);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2" data-i18n="tool3_title">User input tool</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-6" data-i18n="tool3_desc">Enter the username specified in the image.</p>
+            <button class="btn-primary text-sm py-3" onclick="window.location.href='usertool.html' "data-i18n="btn_open">Open Tool</button>
+          </div>
+
+          <!-- Tool 4: History -->
+          <div class="menu-card fade-in" style="animation-delay: 0.4s">
+            <div class="w-12 h-12 rounded-xl mb-4 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--fg)" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2" data-i18n="tool4_title">Generation History</h3>
+            <p class="text-sm text-[var(--fg-muted)] mb-6" data-i18n="tool4_desc">View and download your previously created assets from the cloud.</p>
+            <button class="btn-primary text-sm py-3" data-i18n="btn_view">View History</button>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="p-6 text-center text-xs text-[var(--fg-muted)] border-t border-[var(--border-subtle)]">
+      <span data-i18n="footer_text">Internal Design Department Tool</span> &copy; 2024
+    </footer>
+
+  </div>
+
+<script src="theme.js"></script>
+<script>
+    // ==========================================
+    // 1. SUPABASE CONFIGURATION
+    // ==========================================
+    const SUPABASE_URL = 'https://kwpaqorqhyvdsbriivja.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3cGFxb3JxaHl2ZHNicmlpdmphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTMxMzEsImV4cCI6MjA5MjE2OTEzMX0.6_JgowaJN-jZCx2gk0hPoAGsnDaUV_S_vuV8QGKX1lo';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ==========================================
+    // 2. TRANSLATIONS (EN/TH)
+    // ==========================================
+    const dict = {
+      en: {
+        login_title: "Welcome Back",
+        login_subtitle: "Sign in to access the asset generation portal.",
+        form_email: "Email Address",
+        form_pass: "Password",
+        btn_login: "Sign In",
+        login_no_account: "Don't have an account?",
+        btn_register: "Create Account",
+        dash_title: "LínFán Universe",
+        dash_subtitle: "Select a tool to begin generating professional design assets.",
+        tool1_title: "Create a slip status",
+        tool1_desc: "Create realistic failed transaction notifications for UI/UX mockups.",
+        tool2_title: "Frame Mockups IPHONE X-14",
+        tool2_desc: "Insert a screenshot into the iPhone X-14 frame.",
+        tool3_title: "User input tool",
+        tool3_desc: "Enter the username specified in the image.",
+        tool4_title: "History",
+        tool4_desc: "View and download your previously created assets.",
+        btn_open: "Open Tool",
+        btn_view: "View History",
+        nav_logout: "Logout",
+        footer_text: "Internal Design Department Tool",
+        toast_login_success: "Login successful. Welcome back!",
+        toast_logout: "You have been logged out.",
+        toast_error: "Authentication failed. Please check your credentials.",
+        mode_login: "Sign In",
+        mode_register: "Create Account"
+      },
+      th: {
+        login_title: "ยินดีต้อนรับ",
+        login_subtitle: "เข้าสู่ระบบเพื่อใช้งานเครื่องมือสร้างสินทรัพย์",
+        form_email: "อีเมล",
+        form_pass: "รหัสผ่าน",
+        btn_login: "เข้าสู่ระบบ",
+        login_no_account: "ยังไม่มีบัญชี?",
+        btn_register: "สมัครสมาชิก",
+        dash_title: "จักวาลหลินฝาน",
+        dash_subtitle: "เลือกเครื่องมือเพื่อเริ่มสร้างงานออกแบบระดับมืออาชีพ",
+        tool1_title: "สร้างสถานะสลิป",
+        tool1_desc: "สร้างระบบแจ้งสลิปผ่านและไม่ผ่านการตรวจสอบ",
+        tool2_title: "iPhone X-14",
+        tool2_desc: "ใส่ภาพหน้าจอลงในกรอบ iPhone รุ่นX-14",
+        tool3_title: "เครื่องมือป้อนข้อมูลผู้ใช้",
+        tool3_desc: "ใส่ยูสเซอร์ในภาพ",
+        tool4_title: "ประวัติการใช้งาน",
+        tool4_desc: "ดูและดาวน์โหลดไฟล์ที่สร้างไว้ก่อนหน้านี้",
+        btn_open: "เปิดใช้งานเลยกะได่",
+        btn_view: "ดูประวัติ",
+        nav_logout: "ออกจากระบบ",
+        footer_text: "เครื่องมือภายในแผนกออกแบบ",
+        toast_login_success: "เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ!",
+        toast_logout: "ออกจากระบบสำเร็จ",
+        toast_error: "การเข้าสู่ระบบล้มเหลว กรุณาตรวจสอบข้อมูล",
+        mode_login: "เข้าสู่ระบบ",
+        mode_register: "สมัครสมาชิก"
+      }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'th';
+    let isLoginMode = true;
+
+    // ==========================================
+    // 3. UI LOGIC
+    // ==========================================
+    
+    const authContainer = document.getElementById('auth-container');
+    const dashboardContainer = document.getElementById('dashboard-container');
+    const authStatus = document.getElementById('auth-status');
+    const toastEl = document.getElementById('toast');
+    const authForm = document.getElementById('auth-form');
+    const langBtnEn = document.getElementById('lang-en');
+    const langBtnTh = document.getElementById('lang-th');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('lang', lang);
+      
+      // Update active state
+      langBtnEn.classList.toggle('bg-white/10', lang === 'en');
+      langBtnEn.classList.toggle('text-white', lang === 'en');
+      langBtnTh.classList.toggle('bg-white/10', lang === 'th');
+      langBtnTh.classList.toggle('text-white', lang === 'th');
+
+      // Update text content
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[lang][key]) {
+          el.textContent = dict[lang][key];
+        }
+      });
+    }
+
+    function toggleAuthMode() {
+      isLoginMode = !isLoginMode;
+      const btn = document.querySelector('[data-i18n="btn_login"]');
+      const toggleBtn = document.querySelector('[data-i18n="btn_register"]');
+      const mainText = document.querySelector('[data-i18n="login_no_account"]');
+
+      if (isLoginMode) {
+        btn.textContent = dict[currentLang].mode_login;
+        toggleBtn.textContent = dict[currentLang].btn_register;
+        mainText.textContent = dict[currentLang].login_no_account;
+      } else {
+        btn.textContent = dict[currentLang].mode_register;
+        toggleBtn.textContent = dict[currentLang].mode_login;
+        mainText.textContent = currentLang === 'en' ? "Already have an account?" : "มีบัญชีอยู่แล้ว?";
+      }
+    }
+
+    function updateUIForUser(user) {
+      if (user) {
+        authContainer.classList.add('hidden');
+        dashboardContainer.classList.remove('hidden');
+        authStatus.classList.remove('hidden');
+        authStatus.classList.add('flex');
+        document.getElementById('user-email').textContent = user.email;
+      } else {
+        authContainer.classList.remove('hidden');
+        dashboardContainer.classList.add('hidden');
+        authStatus.classList.add('hidden');
+        authStatus.classList.remove('flex');
+      }
+    }
+
+    // ==========================================
+    // 4. AUTHENTICATION LOGIC
+    // ==========================================
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const password = document.getElementById('auth-password').value;
+
+      let result;
+      if (isLoginMode) {
+        result = await supabaseClient.auth.signInWithPassword({ email, password });
+      } else {
+        result = await supabaseClient.auth.signUp({ email, password });
+      }
+
+      if (result.error) {
+        showToast(result.error.message, 'error');
+      } else {
+        // On Sign Up, Supabase might require email confirmation depending on settings
+        if (!isLoginMode && result.data.user && !result.data.session) {
+            showToast(currentLang === 'en' ? 'Check your email for confirmation' : 'กรุณาตรวจสอบอีเมลเพื่อยืนยันตัวตน', 'success');
+        } else {
+            showToast(dict[currentLang].toast_login_success, 'success');
+            updateUIForUser(result.data.user);
+        }
+      }
+    });
+
+    async function handleLogout() {
+      await supabaseClient.auth.signOut();
+      showToast(dict[currentLang].toast_logout, 'success');
+      updateUIForUser(null);
+    }
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+  updateUIForUser(session?.user || null);
+});
+
+    // ==========================================
+    // 5. VISUAL EFFECTS (Background)
+    // ==========================================
+    
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initParticles() {
+      particles = [];
+      for(let i=0; i<30; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.5,
+          xd: (Math.random() - 0.5) * 0.5,
+          yd: (Math.random() - 0.5) * 0.5
+        });
+      }
+    }
+
+function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Gradient background
+      const grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width);
+      grad.addColorStop(0, 'rgba(0, 50, 80, 0.2)');
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(p => {
+        p.x += p.xd;
+        p.y += p.yd;
+        if(p.x < 0 || p.x > canvas.width) p.xd *= -1;
+        if(p.y < 0 || p.y > canvas.height) p.yd *= -1;
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.fill();
+      });
+      requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initParticles();
+    });
+    
+    // Init
+    resizeCanvas();
+    initParticles();
+    drawParticles();
+    setLanguage(currentLang);
+
+async function checkAuth(){
+  const { data } = await supabaseClient.auth.getSession()
+
+  updateUIForUser(data.session?.user || null)
+}
+
+checkAuth()
+async function saveData() {
+  const title = document.getElementById('title').value
+  const url = document.getElementById('url').value
+
+const { data } = await supabaseClient.auth.getUser()
+
+const { error } = await supabaseClient.from('projects').insert([{
+  user_id: data.user.id,
+  title: title,
+  url: url
+}])
+
+  if(error){
+    alert("บันทึกไม่สำเร็จ")
+    console.log(error)
+  }else{
+    alert("บันทึกสำเร็จ")
+  }
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  const title = document.getElementById('toast-title');
+  const msg = document.getElementById('toast-message');
+
+  toast.className = `toast ${type}`;
+
+  if (type === 'success') {
+    icon.innerHTML = "✔️";
+    title.textContent = currentLang === 'en' ? "Success" : "สำเร็จ";
+  } else {
+    icon.innerHTML = "❌";
+    title.textContent = currentLang === 'en' ? "Error" : "ผิดพลาด";
+  }
+
+  msg.textContent = message;
+
+  setTimeout(() => toast.classList.add('show'), 10);
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+function updateIcons(isDark) {
+    const moon = document.getElementById('iconMoon');
+    const sun = document.getElementById('iconSun');
+    if (!moon || !sun) return; // กัน Error ถ้าหา ID ไม่เจอ
+
+    if (isDark) {
+        sun.classList.remove('hidden');  // โหมดมืด โชว์พระอาทิตย์
+        moon.classList.add('hidden');
+    } else {
+        sun.classList.add('hidden');
+        moon.classList.remove('hidden'); // โหมดสว่าง โชว์พระจันทร์
+    }
+}
+
+
+
+</script>
+</body>
+</html>

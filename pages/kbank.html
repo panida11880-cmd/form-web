@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=kasikornLocal:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ==================== */
+        /* 1. Variable Definitions (Palette) */
+        /* ==================== */
+        :root {
+            --color-burgundy: #800020;
+            --color-black: #121212;
+            --color-white: #ffffff;
+            --color-gray: #6b7280;
+            --color-gray-light: #f1f5f9;
+            
+            /* Default (Dark Mode) */
+            --bg-primary: var(--color-black);
+            --bg-secondary: #1e1e1e;
+            --text-primary: var(--color-white);
+            --text-secondary: #cccccc;
+            --accent-color: var(--color-white);
+            --accent-text: var(--color-black);
+            --border-color: #334155;
+        }
+
+        /* ==================== */
+        /* 2. Light Mode Activation */
+        /* ==================== */
+        html.light {
+            --bg-primary: var(--color-gray-light);
+            --bg-secondary: var(--color-white);
+            --text-primary: var(--color-black);
+            --text-secondary: #333333;
+            --accent-color: var(--color-burgundy);
+            --accent-text: var(--color-white);
+            --border-color: #e0e0e0;
+        }
+
+        body { 
+            font-family: 'kasikornLocal', sans-serif; 
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Input & Select Styling */
+        input, select {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--color-burgundy);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(128, 0, 32, 0.2);
+        }
+
+        /* Button Styling */
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            border: 2px solid transparent;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-ghost {
+            background-color: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-ghost:hover {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+        }
+
+        canvas {
+              width: 449px;
+    height: 640px;
+            
+        }
+
+        /* Custom Scrollbar for Dark Mode */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--color-burgundy); border-radius: 4px; }
+   
+@font-face {
+    font-family: 'kasikornLocal';
+    src: url('./Font/kasikorn_medim.ttf') format('truetype');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+    
+    </style>
+</head>
+<body class="min-h-screen pb-10">
+
+    <!-- Navigation -->
+    <nav class="p-4 border-b transition-colors duration-300 sticky top-0 z-50 mb-6" 
+         style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <a href="home.html" class="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors" 
+               style="color: var(--text-primary); border: 1px solid var(--border-color);">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                กลับ
+            </a>
+            
+            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                style="background: rgba(128, 0, 32, 0.1); border: 1px solid var(--border-color); color: var(--text-primary);">
+                <svg id="iconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <svg id="iconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
+        </div>
+    </nav>
+    
+    <main class="max-w-4xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            
+ <!-- Canvas Preview -->
+            <div class="flex flex-col items-center">
+                <div class="canvas-container shadow-2xl">
+<canvas id="canvas" width="898" height="1280"></canvas>                </div>
+                <p class="mt-4 text-sm" style="color: var(--text-secondary);"></p>
+            </div>
+
+
+            <!-- Form Section -->
+            <div class="p-6 rounded-2xl shadow-xl border" 
+                 style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                
+                <h2 class="text-xl font-bold mb-6 flex items-center" style="color: var(--text-primary);">
+                    <span style="background-color: var(--color-burgundy);" class="w-2 h-6 rounded-full mr-3"></span>
+                    ตั้งค่าสลิป
+                </h2>
+                
+                <div class="space-y-4">
+                    
+                    <!-- Background Selector -->
+                    <div>
+                        <label class="block text-sm mb-1" style="color: var(--text-secondary);">เลือกพื้นหลัง</label>
+                        <select id="bgSelector" onchange="changeBackground()" class="w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+                            <!-- แก้ไขชื่อตรงนี้ได้เลยครับ -->
+                            <option value="https://i.ibb.co/vxRnSFzK/image.png">พื้นหลัง 1</option>
+                            <option value="https://i.ibb.co/CpQBZP6D/image.png">พื้นหลัง 2</option>
+                            <option value="https://i.ibb.co/whCY3T0k/image.png">พื้นหลัง 3</option>
+                            <option value="https://i.ibb.co/SDJRZ9Sq/image.png">พื้นหลัง 4</option>
+                            <option value="https://i.ibb.co/MYwfM9G/image.png">พื้นหลัง 5</option>
+                            <option value="https://i.ibb.co/Rp8m4j38/image.png">พื้นหลัง 6</option>
+                            <option value="https://i.ibb.co/8DpDPnYv/image.png">พื้นหลัง 7</option>
+                            <option value="https://i.ibb.co/KzbhChp6/image.png">พื้นหลัง 8</option>
+                            <option value="https://i.ibb.co/tMRFJDYk/image.png">พื้นหลัง 9</option>
+                            <option value="https://i.ibb.co/HLYpSsRt/image.png">พื้นหลัง 10</option>
+                            <option value="https://i.ibb.co/bgDQyQ9w/image.png">พื้นหลัง 11</option>
+                            <option value="https://i.ibb.co/4wPNdkVb/image.png">พื้นหลัง 12</option>
+                            <option value="https://i.ibb.co/QyRSzm4/image.png">พื้นหลัง 13</option>
+                            <option value="https://i.ibb.co/d4k448zt/image.png">พื้นหลัง 14</option>
+                            <option value="https://i.ibb.co/2YynwnbD/image.png">พื้นหลัง 15</option>
+                            <option value="https://i.ibb.co/4nDGMw8R/image.png">พื้นหลัง 16</option>
+                            <option value="https://i.ibb.co/ZpxJcWt8/image.png">พื้นหลัง 17</option>
+                            <option value="https://i.ibb.co/Cpc0w9Y1/image.png">พื้นหลัง 18</option>
+                            <option value="https://i.ibb.co/kV30TZWQ/N-K69.jpg">N-K69</option>
+                            <option value="https://i.ibb.co/hJPMWVyx/N-K68.jpg">N-K68</option>
+                            <option value="https://i.ibb.co/C5GbTVPj/N-K65.jpg">N-K65</option>
+                            <option value="https://i.ibb.co/1Y93rPqQ/N-K61.jpg">N-K61</option>
+                            <option value="https://i.ibb.co/nM8WhFBb/N-K59.jpg">N-K59</option>
+                            <option value="https://i.ibb.co/4nRLG2pL/N-K58.jpg">N-K58</option>
+                            <option value="https://i.ibb.co/h12FTqq2/N-K57.jpg">N-K57</option>
+                            <option value="https://i.ibb.co/Q70nZHkd/N-K56.jpg">N-K56</option>
+                            <option value="https://i.ibb.co/nNTdZPbf/N-K55.jpg">N-K55</option>
+                            <option value="https://i.ibb.co/kVwwKktt/N-K54.jpg">N-K54</option>
+                            <option value="https://i.ibb.co/1YQG95dt/N-K53.jpg">N-K53</option>
+                            <option value="https://i.ibb.co/QjNqkQ4L/N-K52.jpg">N-K52</option>
+                            <option value="https://i.ibb.co/67xSzV7X/N-K51.jpg">N-K51</option>
+                            <option value="https://i.ibb.co/7dtdxSRy/N-K50.jpg">N-K50</option>
+                        </select>
+                    </div>
+
+                    <!-- Data Inputs -->
+                    <div class="grid grid-cols-1 gap-3">
+                        
+                        <div>
+                            <label class="block text-sm mb-1" style="color: var(--text-secondary);">เวลา (hh:mm:ss):</label>
+                            <input type="datetime-local" id="datetime"
+    class="w-full rounded-lg px-3 py-2 text-sm"
+    oninput="drawCanvas()">
+                        </div>
+                    </div>
+
+
+                                        <div class="pt-2 border-t" style="border-color: var(--border-color);">
+                        <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">ผู้โอน</label>
+                        <div class="space-y-2">
+                            <input type="text" id="name1" placeholder="นาง จุฑามาศ ป" class="w-full rounded-lg px-3 py-2 text-sm" oninput="drawCanvas()">
+                            <!-- แก้ไข: id ต้องเป็น acnumber1 -->
+                            <input type="text" id="acnumber1" placeholder="xxx-x-x5269-x" class="w-full rounded-lg px-3 py-2 text-sm" oninput="drawCanvas()">
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t" style="border-color: var(--border-color);">
+                        <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">ผู้รับ</label>
+                        <div class="space-y-2">   
+                            <input type="text" id="name2" placeholder="นาย ประสิทธิ์ ครองสุข" class="w-full rounded-lg px-3 py-2 text-sm" oninput="drawCanvas()">
+                            <!-- แก้ไข: id ต้องเป็น acnumber2 (เดิมเป็น acnumber1) -->
+                            <input type="text" id="acnumber2" placeholder="xxx-x-x0142-x" class="w-full rounded-lg px-3 py-2 text-sm" oninput="drawCanvas()">
+                    
+                        <label class="block text-sm mb-1" style="color: var(--text-secondary);">เลือกธนาคาร</label>
+                        <select id="bgSelector" onchange="changeBackground()" class="w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+                            <!-- แก้ไขชื่อตรงนี้ได้เลยครับ -->
+                            <option value="https://i.ibb.co/vxRnSFzK/image.png">พื้นหลัง 1</option>
+                            <option value="https://i.ibb.co/CpQBZP6D/image.png">พื้นหลัง 2</option>
+                            </select>
+        
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t" style="border-color: var(--border-color);">
+                        <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">เลขที่รายการโอน</label>
+                        <div class="space-y-2">
+
+                            <input type="text" id="orderId" placeholder="TX123456789" 
+                                class="w-full rounded-lg px-3 py-2 text-sm"
+                                oninput="drawCanvas()">
+                        </div>
+                    </div>
+                    
+
+                    <div>
+                        <label class="block text-sm mb-1" style="color: var(--text-secondary);">จำนวนเงิน (บาท)</label>
+                        <input type="text" id="amount" placeholder="1,000.00" 
+                            class="w-full rounded-lg px-3 py-2 text-sm font-semibold"
+                            style="color: var(--color-burgundy);"
+                            oninput="drawCanvas()">
+                    </div>
+                </div>
+                <br>
+                     <label>(10ตัว) xxx-x-x0000-x </label><br>
+                <label>(12ตัว) xxx-x-x0000-xxx </label><br>
+                <label>(พร้อมเพย์) xxx-xxx-0000 </label><br>
+                <label>(พร้อมเพย์วอลเล็ท) 000-xxxxxxxx-0000 </label>
+                <div class="mt-8 pt-6 space-y-3" style="border-top: 1px solid var(--border-color);">
+                    <button onclick="copyCanvas()" class="w-full btn-primary py-3 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        คัดลอกรูปภาพ
+                    </button>
+
+                    <button onclick="downloadCanvas()" class="w-full btn-ghost py-3 rounded-xl flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        ดาวน์โหลดรูปภาพ
+                    </button>
+                </div>
+            </div>
+
+           
+
+        </div>
+    </main>
+
+        <script>
+        // =========================
+        // Theme Logic (Internal)
+        // =========================
+        (function () {
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                html.classList.add('light');
+            } else {
+                html.classList.remove('light');
+            }
+            updateIcons(savedTheme === 'light');
+        })();
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isLight = html.classList.contains('light');
+            if (isLight) {
+                html.classList.remove('light');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            }
+            updateIcons(!isLight);
+        }
+
+        function updateIcons(isLightMode) {
+            const moon = document.getElementById('iconMoon');
+            const sun = document.getElementById('iconSun');
+            if (!moon || !sun) return;
+            if (isLightMode) {
+                moon.classList.remove('hidden');
+                sun.classList.add('hidden');
+            } else {
+                moon.classList.add('hidden');
+                sun.classList.remove('hidden');
+            }
+        }
+
+        // =========================
+        // Canvas Logic
+        // =========================
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const bg = new Image();
+        bg.crossOrigin = "anonymous";
+
+        // Initial Load
+        changeBackground();
+
+        function changeBackground() {
+            const selector = document.getElementById('bgSelector');
+            bg.src = selector.value;
+        }
+
+        bg.onload = function() {
+            drawCanvas();
+        }
+        
+        bg.onerror = () => console.log("โหลดภาพไม่ได้");
+
+        // --- [ฟังก์ชันใหม่] ตั้งค่าวันที่ปัจจุบันให้ Input ---
+        function setCurrentDateTime() {
+            const now = new Date();
+            // จัดรูปแบบให้เป็น YYYY-MM-DDTHH:mm (มาตรฐานของ datetime-local)
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const isoString = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById("datetime").value = isoString;
+        }
+
+        // --- [ฟังก์ชันใหม่] แปลงวันที่จาก Input ให้เป็นภาษาไทยสำหรับแสดงบน Canvas ---
+        function formatThaiDate(dateString) {
+            if (!dateString) return "-";
+            const date = new Date(dateString);
+            if (isNaN(date)) return "-";
+
+            const options = {
+                day: 'numeric',
+                month: 'short',
+                year: '2-digit'
+            };
+            // toLocaleDateString ภาษา th-TH จะแปลงปี ค.ศ. เป็น พ.ศ. ให้เองอัตโนมัติ
+            const dateStr = date.toLocaleDateString('th-TH', options);
+            
+            const timeStr = date.toLocaleTimeString('th-TH', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `${dateStr}  ${timeStr} น.`;
+        }
+
+        function drawCanvas() {
+            const scale = 2;
+
+            const orderId = document.getElementById("orderId").value || "016118193844CTF05802";
+            const datetimeVal = document.getElementById("datetime").value; // รับค่าจาก input
+            const name1 = document.getElementById("name1").value || "นาง จุฑามาศ ป";
+            const acnumber1 = document.getElementById("acnumber1").value || "xxx-x-x0000-x";
+            const name2 = document.getElementById("name2").value || "นาย ประสิทธิ์ ครองสุข";
+            const acnumber2 = document.getElementById("acnumber2").value || "xxx-x-x1558-x";         
+            const amount = document.getElementById("amount").value || "0.00";
+
+            // 🔥 รีเซ็ต canvas
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 🔥 scale คมชัด
+            ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+            // 🔥 วาดพื้นหลัง
+            ctx.drawImage(bg, 0, 0, 449, 640);
+
+            ctx.fillStyle = "#484746";
+            ctx.textAlign = "left";
+
+            // 📌 วันที่ (ใช้ฟังก์ชันแปลงใหม่)
+            ctx.font = "600 20px kasikornLocal";
+            const displayDate = formatThaiDate(datetimeVal);
+            ctx.fillText(displayDate, 35, 71);
+
+            // 📌 Order ID
+            ctx.font = "400 18px kasikornLocal";
+            ctx.fillText(orderId, 32, 470);
+
+            // 📌 รายการ
+            ctx.font = "400 20px kasikornLocal";
+            ctx.fillText(name1, 130, 144);
+            ctx.fillText(acnumber1, 129, 209);
+            
+            ctx.font = "400 20px kasikornLocal";
+            ctx.fillText(name2, 130, 310);
+            ctx.fillText(acnumber2, 129, 374);
+
+            // 📌 จำนวนเงิน
+            ctx.font = "700 22px kasikornLocal";
+            ctx.fillStyle = "#000";
+            ctx.fillText(formatMoney(amount) + " บาท", 30, 360);
+        }
+
+        async function copyCanvas() {
+            try {
+                canvas.toBlob(async (blob) => {
+                    const item = new ClipboardItem({ "image/png": blob });
+                    await navigator.clipboard.write([item]);
+                    alert("✅ คัดลอกสลิปแล้ว!");
+                });
+            } catch (err) {
+                console.error("Copy failed: ", err);
+                alert("❌ ไม่สามารถคัดลอกได้");
+            }
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = 'receipt-slip.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function formatMoney(num) {
+            return Number(num.replace(/,/g, '') || 0)
+                .toLocaleString('th-TH', { minimumFractionDigits: 2 });
+        }
+
+        // =========================
+        // Initialize
+        // =========================
+        document.fonts.ready.then(() => {
+            drawCanvas();
+        });
+
+        window.onload = () => {
+            setCurrentDateTime(); // ตั้งเวลาปัจจุบันให้ Input ก่อน
+            changeBackground();   // โหลดพื้นหลัง (ซึ่งจะ trigger drawCanvas อัตโนมัติ)
+        };
+
+    </script>
+</body>
+</html>
